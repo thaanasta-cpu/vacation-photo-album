@@ -357,7 +357,7 @@
       { country:"Σουηδία", city:"Στοκχόλμη", months:"Μάιος - Σεπτέμβριος", flight:"περίπου 3ω 40λ", duration:"3 - 4 ημέρες", budget:"€950 - €1.400", landmarks:["Gamla Stan","Vasa Museum","Skansen"], image:"https://images.unsplash.com/photo-1509356843151-3e7d96241e11?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Stockholm+Sweden", eu:true },
       { country:"Νορβηγία", city:"Όσλο", months:"Μάιος - Σεπτέμβριος", flight:"περίπου 4ω", duration:"3 - 4 ημέρες", budget:"€1.050 - €1.550", landmarks:["Όπερα Όσλο","Vigeland Park","Akershus"], image:"https://images.unsplash.com/photo-1513125370-3460ebe3401b?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Oslo+Norway", eu:false },
       { country:"Βουλγαρία", city:"Σόφια", months:"Απρίλιος - Ιούνιος, Σεπτέμβριος - Οκτώβριος", flight:"περίπου 1ω 20λ", duration:"2 - 3 ημέρες", budget:"€350 - €600", landmarks:["Καθεδρικός Alexander Nevsky","Vitosha Boulevard","Boyana Church"], image:"https://images.unsplash.com/photo-1565008576549-57569a49371d?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Sofia+Bulgaria", eu:true },
-      { country:"Ρουμανία", city:"Βουκουρέστι", months:"Απρίλιος - Ιούνιος, Σεπτέμβριος - Οκτώβριος", flight:"περίπου 1ω 30λ", duration:"3 ημέρες", budget:"€450 - €700", landmarks:["Παλάτι Κοινοβουλίου","Παλιά Πόλη","Therme București"], image:"https://images.unsplash.com/photo-1568100036341-80d6c2d7fdfc?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Bucharest+Romania", eu:true },
+      { country:"Ρουμανία", city:"Βουκουρέστι", months:"Απρίλιος - Ιούνιος, Σεπτέμβριος - Οκτώβριος", flight:"περίπου 1ω 30λ", duration:"3 ημέρες", budget:"€450 - €700", landmarks:["Παλάτι Κοινοβουλίου","Παλιά Πόλη","Therme București"], image:"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Bucharest+Romania", eu:true },
       { country:"Κροατία", city:"Ζάγκρεμπ", months:"Μάιος - Ιούνιος, Σεπτέμβριος", flight:"περίπου 2ω", duration:"3 - 4 ημέρες", budget:"€600 - €900", landmarks:["Upper Town","Πλατεία Ban Jelačić","Plitvice"], image:"https://images.unsplash.com/photo-1555990538-1e6c3f9644e9?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Zagreb+Croatia", eu:true },
       { country:"Μάλτα", city:"Βαλέτα", months:"Απρίλιος - Ιούνιος, Σεπτέμβριος - Οκτώβριος", flight:"περίπου 2ω", duration:"4 - 5 ημέρες", budget:"€650 - €1.000", landmarks:["Valletta","Mdina","Blue Lagoon"], image:"https://images.unsplash.com/photo-1529676468696-f3a47aba7d7d?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Valletta+Malta", eu:true },
       { country:"Κύπρος", city:"Λευκωσία", months:"Απρίλιος - Ιούνιος, Σεπτέμβριος - Νοέμβριος", flight:"περίπου 1ω 45λ", duration:"4 - 6 ημέρες", budget:"€550 - €900", landmarks:["Παλιά Πόλη","Κυπριακό Μουσείο","Τρόοδος"], image:"https://images.unsplash.com/photo-1579687196544-08a802d55ce8?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Nicosia+Cyprus", eu:true },
@@ -381,6 +381,9 @@
     ].map(([country, city]) => ({ country, city, catalogOnly:true, image:"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(city + " " + country), eu:false }));
 
     const allDestinations = [...destinations, ...europeCatalog.filter((item) => !destinations.some((destination) => destination.country === item.country))];
+    const fallbackImage = "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=80";
+    const brokenImageIds = ["1529676468696","1555990538","1562065881","1568100036341","1576066737752","1579687196544","1587257721674","1600004854863"];
+    const safeImage = (url) => brokenImageIds.some((id) => url.includes(id)) ? fallbackImage : url;
 
     function officialDocumentsUrl(destination) {
       return destination.eu ? "https://europa.eu/youreurope/citizens/travel/entry-exit/eu-citizen/index_el.htm" : "https://www.mfa.gr/en/citizen-services/travel-advice/";
@@ -395,7 +398,7 @@
         const card = document.createElement("button");
         card.className = "destination-card";
         card.type = "button";
-        card.style.backgroundImage = "url('" + destination.image + "')";
+        card.style.backgroundImage = "url('" + safeImage(destination.image) + "')";
         card.style.animationDelay = (index * 55) + "ms";
         const content = document.createElement("span");
         content.className = "destination-card-content";
@@ -407,6 +410,7 @@
     }
 
     function showDestination(destination) {
+      destination.image = safeImage(destination.image);
       $("guide-list").classList.add("hidden");
       $("close-guide").textContent = "‹ Πίσω στους προορισμούς";
       const detail = $("guide-detail");
