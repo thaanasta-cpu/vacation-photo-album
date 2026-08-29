@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == "tha.anasta@gmail.com";
+    }
+
+    function ownMembership(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function membership() {
+      return get(/databases/$(database)/documents/memberships/$(request.auth.uid));
+    }
+
+    function isApproved() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/memberships/$(request.auth.uid))
+        && membership().data.status == "approved";
+    }
+
+    match /memberships/{userId} {
+      allow get: if isAdmin() || ownMembership(userId);
+      allow list: if isAdmin();
+      allow create: if ownMembership(userId)
+        && request.resource.data.status == "pending"
+        && request.resource.data.allowedTripIds.size() == 0
+        && request.resource.data.email == request.auth.token.email;
+      allow update, delete: if isAdmin();
+    }
+
+    match /trips/{tripId} {
+      allow get: if isAdmin()
+        || (isApproved() && tripId in membership().data.allowedTripIds);
+      allow list, create, update, delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#176b87">
+  <title>Οι Διακοπές Μας</title>
+  <style>
+    :root { --sea:#176b87; --sea-dark:#104c62; --coral:#d75a37; --sand:#fff9ed; --white:#fff; --text:#17323b; --muted:#5a6d73; --line:#d8e5e6; --soft:#e4f3f5; --radius:18px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-width:320px; color:var(--text); background:var(--sand); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; font-size:17px; line-height:1.45; }
+    button,input,textarea { font:inherit; }
+    button { cursor:pointer; }
+    .page { width:min(100% - 32px,760px); margin:0 auto; padding:24px 0 48px; }
+    header { padding:27px 21px; border-radius:var(--radius); color:var(--white); text-align:center; background:linear-gradient(145deg,var(--sea),#2496ad); }
+    .sun { font-size:2.35rem; line-height:1; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { margin:10px 0 6px; font-size:clamp(2rem,9vw,3rem); line-height:1.08; }
+    header p { margin-bottom:0; }
+    main { margin-top:26px; }
+    .card { padding:20px; border:2px solid var(--line); border-radius:var(--radius); background:var(--white); }
+    .hidden { display:none !important; }
+    .button { min-height:50px; padding:12px 18px; border:0; border-radius:13px; color:var(--white); background:var(--sea); font-weight:750; }
+    .button:focus-visible,.trip-card:focus-visible { outline:4px solid #f6b94b; outline-offset:3px; }
+    .button.secondary { color:var(--sea-dark); background:var(--soft); }
+    .button.danger { background:var(--coral); }
+    .center { text-align:center; }
+    .login-card { margin-top:28px; padding:30px 20px; }
+    .login-card h2 { margin-bottom:8px; }
+    .login-card p,.subtle { color:var(--muted); }
+    .login-card .button { width:100%; margin-top:10px; }
+    .top-actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:22px; }
+    .user-name { max-width:58%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:.9rem; }
+    .trip-list { display:grid; gap:14px; }
+    .trip-card { width:100%; padding:20px; color:var(--text); text-align:left; background:var(--white); box-shadow:0 3px 0 rgba(23,107,135,.08); }
+    .trip-card h3 { margin-bottom:3px; font-size:1.25rem; }
+    .trip-card p { margin-bottom:0; color:var(--muted); }
+    .trip-open { display:block; margin-top:11px; color:var(--sea); font-weight:750; }
+    .back { width:auto; margin-bottom:18px; color:var(--sea-dark); background:transparent; }
+    .choices { display:grid; gap:16px; }
+    .choice { display:block; padding:28px 20px; border:0; border-radius:var(--radius); color:var(--white); text-align:center; text-decoration:none; box-shadow:0 4px 0 rgba(23,50,59,.14); }
+    .choice.photos { background:linear-gradient(145deg,#176b87,#2496ad); }
+    .choice.videos { background:linear-gradient(145deg,#d75a37,#ef8a4c); }
+    .choice-icon { display:block; margin-bottom:8px; font-size:2.5rem; }
+    .choice strong { display:block; font-size:1.35rem; }
+    .choice span:last-child { display:block; margin-top:4px; }
+    .admin-title { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .admin-tabs { display:flex; gap:8px; margin:18px 0; }
+    .tab { flex:1; min-height:46px; border:2px solid var(--line); border-radius:12px; color:var(--sea-dark); background:var(--white); font-weight:750; }
+    .tab.active { color:var(--white); background:var(--sea); border-color:var(--sea); }
+    form { display:grid; gap:12px; }
+    label { display:grid; gap:5px; font-weight:700; }
+    input,textarea { width:100%; padding:12px; border:2px solid var(--line); border-radius:12px; color:var(--text); background:var(--white); }
+    textarea { min-height:82px; resize:vertical; }
+    .form-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:2px; }
+    .admin-list { display:grid; gap:12px; margin-top:18px; }
+    .admin-item { padding:16px; border:1px solid var(--line); border-radius:14px; background:#fffdf9; }
+    .admin-item h3 { margin-bottom:3px; font-size:1.08rem; }
+    .admin-item p { margin-bottom:10px; color:var(--muted); font-size:.92rem; }
+    .check-list { display:grid; gap:8px; margin:12px 0; }
+    .check { display:flex; align-items:center; gap:9px; font-weight:500; }
+    .check input { width:20px; height:20px; margin:0; }
+    .empty { padding:28px 18px; text-align:center; color:var(--muted); }
+    .notice { margin:18px 0; padding:17px; border-radius:14px; color:var(--sea-dark); background:var(--soft); }
+    .error { margin:16px 0; padding:14px; border-radius:12px; color:#8c2d1d; background:#ffe9e5; }
+    footer { margin-top:32px; color:var(--muted); text-align:center; font-size:.9rem; }
+    @media (min-width:640px) { .trip-list,.choices { grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header><div class="sun" aria-hidden="true">☀️</div><h1>Οι Διακοπές Μας</h1><p>Οι αναμνήσεις μας, μόνο για την παρέα μας.</p></header>
+    <main>
+      <div id="message" class="error hidden" role="alert"></div>
+
+      <section id="login-view" class="card login-card center">
+        <h2>Καλώς ήρθατε</h2>
+        <p>Συνδεθείτε με Google για να δείτε τα ταξίδια στα οποία έχετε πρόσβαση.</p>
+        <button class="button" id="login-button" type="button">Σύνδεση με Google</button>
+      </section>
+
+      <section id="pending-view" class="card login-card center hidden">
+        <h2>Το αίτημα στάλθηκε</h2>
+        <p>Ο διαχειριστής θα επιλέξει σε ποια ταξίδια μπορείτε να έχετε πρόσβαση.</p>
+        <button class="button secondary" id="pending-logout" type="button">Αποσύνδεση</button>
+      </section>
+
+      <section id="trips-view" class="hidden">
+        <div class="top-actions"><span class="user-name" id="user-name"></span><button class="button secondary" id="logout-button" type="button">Αποσύνδεση</button></div>
+        <div id="admin-bar" class="notice hidden"><div class="admin-title"><strong>Λειτουργία διαχειριστή</strong><button class="button" id="open-admin" type="button">Διαχείριση</button></div></div>
+        <h2>Τα ταξίδια σας</h2>
+        <p class="subtle">Πατήστε ένα ταξίδι για φωτογραφίες ή βίντεο.</p>
+        <div class="trip-list" id="trip-list"></div>
+      </section>
+
+      <section id="choices-view" class="hidden">
+        <button class="button secondary back" id="back-to-trips" type="button">‹ Πίσω στα ταξίδια</button>
+        <div class="center"><h2 id="selected-title"></h2><p class="subtle" id="selected-description"></p></div>
+        <div class="choices">
+          <a class="choice photos" id="photos-link" href="#" target="_blank" rel="noopener noreferrer"><span class="choice-icon" aria-hidden="true">📷</span><strong>Φωτογραφίες</strong><span>Άνοιγμα iCloud album</span></a>
+          <a class="choice videos" id="videos-link" href="#" target="_blank" rel="noopener noreferrer"><span class="choice-icon" aria-hidden="true">▶️</span><strong>Βίντεο &amp; μουσική</strong><span>Άνοιγμα YouTube playlist</span></a>
+        </div>
+      </section>
+
+      <section id="admin-view" class="hidden">
+        <div class="top-actions"><button class="button secondary" id="close-admin" type="button">‹ Πίσω</button><strong>Διαχείριση</strong></div>
+        <div class="admin-tabs"><button class="tab active" id="trips-tab" type="button">Ταξίδια</button><button class="tab" id="people-tab" type="button">Άτομα</button></div>
+        <div id="admin-trips">
+          <div class="card">
+            <h2 id="trip-form-title">Νέο ταξίδι</h2>
+            <form id="trip-form">
+              <label>Τίτλος<input id="trip-title" required placeholder="π.χ. Πάρος 2026"></label>
+              <label>Περιγραφή<textarea id="trip-description" required placeholder="Λίγες λέξεις για το ταξίδι"></textarea></label>
+              <label>iCloud link<input id="trip-photos-url" type="url" required placeholder="https://www.icloud.com/..."></label>
+              <label>YouTube link<input id="trip-videos-url" type="url" required placeholder="https://www.youtube.com/..."></label>
+              <div class="form-actions"><button class="button" type="submit">Αποθήκευση</button><button class="button secondary hidden" id="cancel-edit" type="button">Ακύρωση</button><button class="button danger hidden" id="delete-trip" type="button">Διαγραφή</button></div>
+            </form>
+          </div>
+          <div class="admin-list" id="admin-trip-list"></div>
+        </div>
+        <div id="admin-people" class="hidden"><p class="subtle">Επίλεξε τα ταξίδια που επιτρέπεται να βλέπει κάθε άτομο.</p><div class="admin-list" id="people-list"></div></div>
+      </section>
+    </main>
+    <footer>Οι σύνδεσμοι εμφανίζονται μόνο σε εγκεκριμένους χρήστες.</footer>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+    import { getFirestore, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsy3DpgriVKDFmTAeP6Nwqoi9rhlyowk",
+      authDomain: "vacation-photo-album.firebaseapp.com",
+      projectId: "vacation-photo-album",
+      storageBucket: "vacation-photo-album.firebasestorage.app",
+      messagingSenderId: "778122598082",
+      appId: "1:778122598082:web:9978e8c8b5f325f7abcd5b"
+    };
+    const ADMIN_EMAIL = "tha.anasta@gmail.com";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    const views = ["login-view", "pending-view", "trips-view", "choices-view", "admin-view"];
+    const state = { user:null, membership:null, trips:[], selectedTrip:null, editingTripId:null, unsubscribe:null, membershipUnsubscribe:null };
+    const $ = (id) => document.getElementById(id);
+
+    function showView(id) { views.forEach((view) => $(view).classList.toggle("hidden", view !== id)); }
+    function showMessage(text) { $("message").textContent = text; $("message").classList.remove("hidden"); }
+    function clearMessage() { $("message").textContent = ""; $("message").classList.add("hidden"); }
+    function isAdmin() { return state.user && state.user.email && state.user.email.toLowerCase() === ADMIN_EMAIL; }
+    function formatName(user) { return user.displayName || user.email || "Συνδεδεμένος χρήστης"; }
+    function clearTripListener() { if (state.unsubscribe) { state.unsubscribe(); state.unsubscribe = null; } }
+    function clearListeners() { clearTripListener(); if (state.membershipUnsubscribe) { state.membershipUnsubscribe(); state.membershipUnsubscribe = null; } }
+
+    async function ensureMembership(user) {
+      if (isAdmin()) return;
+      const membershipRef = doc(db, "memberships", user.uid);
+      const membership = await getDoc(membershipRef);
+      if (!membership.exists()) {
+        await setDoc(membershipRef, { email:user.email || "", displayName:user.displayName || "", status:"pending", allowedTripIds:[], requestedAt:serverTimestamp() });
+      }
+    }
+
+    async function loadViewerTrips(allowedTripIds) {
+      const trips = await Promise.all(allowedTripIds.map(async (tripId) => {
+        const snapshot = await getDoc(doc(db, "trips", tripId));
+        return snapshot.exists() ? { id:snapshot.id, ...snapshot.data() } : null;
+      }));
+      state.trips = trips.filter(Boolean).sort((a, b) => (a.title || "").localeCompare(b.title || "", "el"));
+      renderTrips();
+    }
+
+    function listenForTrips() {
+      clearTripListener();
+      if (isAdmin()) {
+        state.unsubscribe = onSnapshot(collection(db, "trips"), (snapshot) => {
+          state.trips = snapshot.docs.map((item) => ({ id:item.id, ...item.data() })).sort((a, b) => (a.title || "").localeCompare(b.title || "", "el"));
+          renderTrips();
+          renderAdminTrips();
+        }, (error) => showMessage(error.message));
+      } else {
+        loadViewerTrips(state.membership.allowedTripIds || []).catch((error) => showMessage(error.message));
+      }
+    }
+
+    function renderTrips() {
+      const container = $("trip-list");
+      container.replaceChildren();
+      if (!state.trips.length) {
+        const empty = document.createElement("div");
+        empty.className = "card empty";
+        empty.textContent = isAdmin() ? "Πρόσθεσε το πρώτο ταξίδι από τη Διαχείριση." : "Δεν έχεις ακόμη πρόσβαση σε κάποιο ταξίδι.";
+        container.append(empty);
+        return;
+      }
+      state.trips.forEach((trip) => {
+        const card = document.createElement("button");
+        card.className = "trip-card";
+        card.type = "button";
+        const title = document.createElement("h3");
+        title.textContent = trip.title;
+        const description = document.createElement("p");
+        description.textContent = trip.description;
+        const open = document.createElement("span");
+        open.className = "trip-open";
+        open.textContent = "Άνοιγμα ταξιδιού ›";
+        card.append(title, description, open);
+        card.addEventListener("click", () => showTripChoices(trip));
+        container.append(card);
+      });
+    }
+
+    function showTripChoices(trip) {
+      state.selectedTrip = trip;
+      $("selected-title").textContent = trip.title;
+      $("selected-description").textContent = trip.description;
+      $("photos-link").href = trip.photosUrl;
+      $("videos-link").href = trip.videosUrl;
+      showView("choices-view");
+      window.scrollTo({ top:0, behavior:"smooth" });
+    }
+
+    function resetTripForm() {
+      state.editingTripId = null;
+      $("trip-form-title").textContent = "Νέο ταξίδι";
+      $("trip-form").reset();
+      $("cancel-edit").classList.add("hidden");
+      $("delete-trip").classList.add("hidden");
+    }
+
+    function editTrip(trip) {
+      state.editingTripId = trip.id;
+      $("trip-form-title").textContent = "Αλλαγή ταξιδιού";
+      $("trip-title").value = trip.title || "";
+      $("trip-description").value = trip.description || "";
+      $("trip-photos-url").value = trip.photosUrl || "";
+      $("trip-videos-url").value = trip.videosUrl || "";
+      $("cancel-edit").classList.remove("hidden");
+      $("delete-trip").classList.remove("hidden");
+      window.scrollTo({ top:0, behavior:"smooth" });
+    }
+
+    function renderAdminTrips() {
+      const container = $("admin-trip-list");
+      container.replaceChildren();
+      state.trips.forEach((trip) => {
+        const item = document.createElement("div");
+        item.className = "admin-item";
+        const title = document.createElement("h3");
+        title.textContent = trip.title;
+        const details = document.createElement("p");
+        details.textContent = trip.description;
+        const button = document.createElement("button");
+        button.className = "button secondary";
+        button.type = "button";
+        button.textContent = "Αλλαγή";
+        button.addEventListener("click", () => editTrip(trip));
+        item.append(title, details, button);
+        container.append(item);
+      });
+    }
+
+    async function renderPeople() {
+      const container = $("people-list");
+      container.replaceChildren();
+      const members = await getDocs(collection(db, "memberships"));
+      if (members.empty) {
+        const empty = document.createElement("div");
+        empty.className = "card empty";
+        empty.textContent = "Δεν υπάρχουν ακόμη αιτήματα πρόσβασης.";
+        container.append(empty);
+        return;
+      }
+      members.docs.forEach((memberDoc) => {
+        const member = memberDoc.data();
+        const item = document.createElement("div");
+        item.className = "admin-item";
+        const title = document.createElement("h3");
+        title.textContent = member.displayName || member.email;
+        const email = document.createElement("p");
+        email.textContent = member.email + (member.status === "pending" ? " · Αναμονή έγκρισης" : " · Εγκεκριμένος");
+        const checks = document.createElement("div");
+        checks.className = "check-list";
+        const selectedIds = new Set(member.allowedTripIds || []);
+        state.trips.forEach((trip) => {
+          const label = document.createElement("label");
+          label.className = "check";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = trip.id;
+          checkbox.checked = selectedIds.has(trip.id);
+          const text = document.createElement("span");
+          text.textContent = trip.title;
+          label.append(checkbox, text);
+          checks.append(label);
+        });
+        const save = document.createElement("button");
+        save.className = "button";
+        save.type = "button";
+        save.textContent = "Αποθήκευση πρόσβασης";
+        save.addEventListener("click", async () => {
+          save.disabled = true;
+          const allowedTripIds = [...checks.querySelectorAll("input:checked")].map((input) => input.value);
+          try {
+            await updateDoc(memberDoc.ref, { status:"approved", allowedTripIds, updatedAt:serverTimestamp() });
+            await renderPeople();
+          } catch (error) { showMessage(error.message); } finally { save.disabled = false; }
+        });
+        item.append(title, email, checks, save);
+        container.append(item);
+      });
+    }
+
+    function openAdmin(tab) {
+      showView("admin-view");
+      $("admin-trips").classList.toggle("hidden", tab !== "trips");
+      $("admin-people").classList.toggle("hidden", tab !== "people");
+      $("trips-tab").classList.toggle("active", tab === "trips");
+      $("people-tab").classList.toggle("active", tab === "people");
+      if (tab === "trips") renderAdminTrips();
+      if (tab === "people") renderPeople().catch((error) => showMessage(error.message));
+      window.scrollTo({ top:0, behavior:"smooth" });
+    }
+
+    $("login-button").addEventListener("click", () => signInWithRedirect(auth, provider).catch((error) => showMessage(error.message)));
+    $("logout-button").addEventListener("click", () => signOut(auth));
+    $("pending-logout").addEventListener("click", () => signOut(auth));
+    $("back-to-trips").addEventListener("click", () => showView("trips-view"));
+    $("open-admin").addEventListener("click", () => openAdmin("trips"));
+    $("close-admin").addEventListener("click", () => { resetTripForm(); showView("trips-view"); });
+    $("trips-tab").addEventListener("click", () => openAdmin("trips"));
+    $("people-tab").addEventListener("click", () => openAdmin("people"));
+    $("cancel-edit").addEventListener("click", resetTripForm);
+
+    $("trip-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const saveButton = event.submitter;
+      saveButton.disabled = true;
+      const trip = { title:$("trip-title").value.trim(), description:$("trip-description").value.trim(), photosUrl:$("trip-photos-url").value.trim(), videosUrl:$("trip-videos-url").value.trim(), updatedAt:serverTimestamp() };
+      try {
+        if (state.editingTripId) await updateDoc(doc(db, "trips", state.editingTripId), trip);
+        else await setDoc(doc(collection(db, "trips")), { ...trip, createdAt:serverTimestamp() });
+        resetTripForm();
+      } catch (error) { showMessage(error.message); } finally { saveButton.disabled = false; }
+    });
+
+    $("delete-trip").addEventListener("click", async () => {
+      if (!state.editingTripId || !window.confirm("Να διαγραφεί αυτό το ταξίδι;")) return;
+      try { await deleteDoc(doc(db, "trips", state.editingTripId)); resetTripForm(); }
+      catch (error) { showMessage(error.message); }
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      clearMessage();
+      clearListeners();
+      state.user = user;
+      state.membership = null;
+      state.trips = [];
+      if (!user) { showView("login-view"); return; }
+      $("user-name").textContent = formatName(user);
+      $("admin-bar").classList.toggle("hidden", !isAdmin());
+      try {
+        await ensureMembership(user);
+        if (isAdmin()) { listenForTrips(); showView("trips-view"); return; }
+        state.membershipUnsubscribe = onSnapshot(doc(db, "memberships", user.uid), (membership) => {
+          state.membership = membership.data();
+          if (!state.membership || state.membership.status !== "approved") { clearTripListener(); showView("pending-view"); return; }
+          listenForTrips();
+          showView("trips-view");
+        }, (error) => showMessage(error.message));
+      } catch (error) { showMessage(error.message); showView("login-view"); }
+    });
+  </script>
+</body>
+</html>
