@@ -45,6 +45,7 @@
     .trip-cover span { font-size:3.2rem; }
     .trip-content { padding:17px 20px 20px; }
     .trip-card h3 { margin-bottom:3px; font-size:1.25rem; }
+    .trip-date { display:block; margin:4px 0 8px; color:var(--sea); font-size:.9rem; font-weight:750; }
     .trip-card p { margin-bottom:0; color:var(--muted); }
     .trip-open { display:block; margin-top:11px; color:var(--sea); font-weight:750; }
     .back { width:auto; margin-bottom:18px; color:var(--sea-dark); background:transparent; }
@@ -59,6 +60,7 @@
     .choice-arrow { font-size:2rem; font-weight:300; }
     .choice-note { margin:16px 4px 0; color:var(--muted); font-size:.92rem; text-align:center; }
     .admin-title { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .request-badge { margin-top:12px; width:100%; min-height:45px; border:0; border-radius:12px; color:#704400; background:#fff0c9; font-weight:750; }
     .invite-button { width:100%; margin:2px 0 18px; }
     .admin-tabs { display:flex; gap:8px; margin:18px 0; }
     .tab { flex:1; min-height:46px; border:2px solid var(--line); border-radius:12px; color:var(--sea-dark); background:var(--white); font-weight:750; }
@@ -102,7 +104,7 @@
 
       <section id="trips-view" class="hidden">
         <div class="top-actions"><span class="user-name" id="user-name"></span><button class="button secondary" id="logout-button" type="button">Αποσύνδεση</button></div>
-        <div id="admin-bar" class="notice hidden"><div class="admin-title"><strong>Λειτουργία διαχειριστή</strong><button class="button" id="open-admin" type="button">Διαχείριση</button></div></div>
+        <div id="admin-bar" class="notice hidden"><div class="admin-title"><strong>Λειτουργία διαχειριστή</strong><button class="button" id="open-admin" type="button">Διαχείριση</button></div><button class="request-badge hidden" id="pending-requests" type="button"></button></div>
         <h2>Τα ταξίδια σας</h2>
         <p class="subtle">Πατήστε ένα ταξίδι για φωτογραφίες ή βίντεο.</p>
         <div class="trip-list" id="trip-list"></div>
@@ -127,6 +129,7 @@
             <form id="trip-form">
               <label>Τίτλος<input id="trip-title" required placeholder="π.χ. Πάρος 2026"></label>
               <label>Περιγραφή<textarea id="trip-description" required placeholder="Λίγες λέξεις για το ταξίδι"></textarea></label>
+              <label>Μήνας και έτος (προαιρετικό)<input id="trip-date" type="month"></label>
               <label>Εικόνα εξωφύλλου (προαιρετικό image link)<input id="trip-cover-url" type="url" placeholder="https://.../photo.jpg"></label>
               <label>Εικονίδιο εξωφύλλου (αν δεν βάλεις εικόνα)<input id="trip-cover-emoji" maxlength="4" placeholder="π.χ. 🌴"></label>
               <label>iCloud link<input id="trip-photos-url" type="url" required placeholder="https://www.icloud.com/..."></label>
@@ -163,7 +166,7 @@
     const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
 
     const views = ["login-view", "pending-view", "trips-view", "choices-view", "admin-view"];
-    const state = { user:null, membership:null, trips:[], selectedTrip:null, editingTripId:null, unsubscribe:null, membershipUnsubscribe:null };
+    const state = { user:null, membership:null, trips:[], selectedTrip:null, editingTripId:null, unsubscribe:null, membershipUnsubscribe:null, pendingRequestsUnsubscribe:null };
     const $ = (id) => document.getElementById(id);
 
     function showView(id) { views.forEach((view) => $(view).classList.toggle("hidden", view !== id)); }
@@ -172,7 +175,26 @@
     function isAdmin() { return state.user && state.user.email && state.user.email.toLowerCase() === ADMIN_EMAIL; }
     function formatName(user) { return user.displayName || user.email || "Συνδεδεμένος χρήστης"; }
     function clearTripListener() { if (state.unsubscribe) { state.unsubscribe(); state.unsubscribe = null; } }
-    function clearListeners() { clearTripListener(); if (state.membershipUnsubscribe) { state.membershipUnsubscribe(); state.membershipUnsubscribe = null; } }
+    function clearListeners() {
+      clearTripListener();
+      if (state.membershipUnsubscribe) { state.membershipUnsubscribe(); state.membershipUnsubscribe = null; }
+      if (state.pendingRequestsUnsubscribe) { state.pendingRequestsUnsubscribe(); state.pendingRequestsUnsubscribe = null; }
+    }
+
+    function formatTripDate(value) {
+      if (!value || !/^\d{4}-\d{2}$/.test(value)) return "";
+      const [year, month] = value.split("-").map(Number);
+      return new Intl.DateTimeFormat("el-GR", { month:"long", year:"numeric" }).format(new Date(year, month - 1, 1));
+    }
+
+    function listenForPendingRequests() {
+      state.pendingRequestsUnsubscribe = onSnapshot(collection(db, "memberships"), (snapshot) => {
+        const count = snapshot.docs.filter((item) => item.data().status === "pending").length;
+        const badge = $("pending-requests");
+        badge.textContent = count === 1 ? "1 νέο αίτημα πρόσβασης" : count + " νέα αιτήματα πρόσβασης";
+        badge.classList.toggle("hidden", count === 0);
+      }, (error) => showMessage(error.message));
+    }
 
     async function ensureMembership(user) {
       if (isAdmin()) return;
@@ -236,12 +258,15 @@
         content.className = "trip-content";
         const title = document.createElement("h3");
         title.textContent = trip.title;
+        const date = document.createElement("span");
+        date.className = "trip-date";
+        date.textContent = formatTripDate(trip.tripDate);
         const description = document.createElement("p");
         description.textContent = trip.description;
         const open = document.createElement("span");
         open.className = "trip-open";
         open.textContent = "Άνοιγμα ταξιδιού ›";
-        content.append(title, description, open);
+        content.append(title, date, description, open);
         card.append(cover, content);
         card.addEventListener("click", () => showTripChoices(trip));
         container.append(card);
@@ -283,6 +308,7 @@
       $("trip-form-title").textContent = "Αλλαγή ταξιδιού";
       $("trip-title").value = trip.title || "";
       $("trip-description").value = trip.description || "";
+      $("trip-date").value = trip.tripDate || "";
       $("trip-cover-url").value = trip.coverUrl || "";
       $("trip-cover-emoji").value = trip.coverEmoji || "";
       $("trip-photos-url").value = trip.photosUrl || "";
@@ -384,6 +410,7 @@
     $("pending-logout").addEventListener("click", () => signOut(auth));
     $("back-to-trips").addEventListener("click", () => showView("trips-view"));
     $("open-admin").addEventListener("click", () => openAdmin("trips"));
+    $("pending-requests").addEventListener("click", () => openAdmin("people"));
     $("close-admin").addEventListener("click", () => { resetTripForm(); showView("trips-view"); });
     $("trips-tab").addEventListener("click", () => openAdmin("trips"));
     $("people-tab").addEventListener("click", () => openAdmin("people"));
@@ -400,7 +427,7 @@
       event.preventDefault();
       const saveButton = event.submitter;
       saveButton.disabled = true;
-      const trip = { title:$("trip-title").value.trim(), description:$("trip-description").value.trim(), coverUrl:$("trip-cover-url").value.trim(), coverEmoji:$("trip-cover-emoji").value.trim(), photosUrl:$("trip-photos-url").value.trim(), videosUrl:$("trip-videos-url").value.trim(), updatedAt:serverTimestamp() };
+      const trip = { title:$("trip-title").value.trim(), description:$("trip-description").value.trim(), tripDate:$("trip-date").value, coverUrl:$("trip-cover-url").value.trim(), coverEmoji:$("trip-cover-emoji").value.trim(), photosUrl:$("trip-photos-url").value.trim(), videosUrl:$("trip-videos-url").value.trim(), updatedAt:serverTimestamp() };
       try {
         if (state.editingTripId) await updateDoc(doc(db, "trips", state.editingTripId), trip);
         else await setDoc(doc(collection(db, "trips")), { ...trip, createdAt:serverTimestamp() });
@@ -425,7 +452,7 @@
       $("admin-bar").classList.toggle("hidden", !isAdmin());
       try {
         // The administrator does not need a membership request.
-        if (isAdmin()) { listenForTrips(); showView("trips-view"); return; }
+        if (isAdmin()) { listenForTrips(); listenForPendingRequests(); showView("trips-view"); return; }
         await ensureMembership(user);
         state.membershipUnsubscribe = onSnapshot(doc(db, "memberships", user.uid), (membership) => {
           state.membership = membership.data();
