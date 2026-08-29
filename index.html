@@ -68,6 +68,7 @@
     .guide-hero h2,.guide-hero p { position:relative; z-index:1; }
     .guide-hero h2 { margin-bottom:7px; font-size:clamp(2rem,9vw,3rem); line-height:1; }
     .guide-hero p { max-width:28rem; margin-bottom:0; }
+    .guide-search { width:100%; margin-top:18px; border:0; background:rgba(255,255,255,.94); }
     .destination-grid { display:grid; gap:14px; }
     .destination-card { position:relative; min-height:184px; overflow:hidden; border:0; border-radius:20px; color:#fff; text-align:left; background:#17323b center/cover; box-shadow:0 6px 18px rgba(23,50,59,.15); animation:cardRise .45s ease both; }
     .destination-card::after { position:absolute; inset:0; background:linear-gradient(0deg,rgba(8,28,35,.88),rgba(8,28,35,.06) 72%); content:""; }
@@ -154,7 +155,7 @@
 
       <section id="guide-view" class="hidden">
         <button class="button secondary back" id="close-guide" type="button">‹ Πίσω στα ταξίδια</button>
-        <div id="guide-list"><div class="guide-hero"><h2>Πού πάμε μετά;</h2><p>Ανακάλυψε προορισμούς, ιδανικούς μήνες και τα βασικά πριν αρχίσει ο σχεδιασμός.</p></div><div class="destination-grid" id="destination-grid"></div></div>
+        <div id="guide-list"><div class="guide-hero"><h2>Πού πάμε μετά;</h2><p>Ανακάλυψε προορισμούς, ιδανικούς μήνες και τα βασικά πριν αρχίσει ο σχεδιασμός.</p><input class="guide-search" id="guide-search" type="search" placeholder="Αναζήτηση χώρας ή πόλης"></div><div class="destination-grid" id="destination-grid"></div></div>
         <div id="guide-detail" class="hidden"></div>
       </section>
 
@@ -350,14 +351,22 @@
       { country:"Ισλανδία", city:"Ρέικιαβικ", months:"Ιούνιος - Αύγουστος, Σεπτέμβριος - Μάρτιος", flight:"περίπου 6ω+", duration:"5 - 6 ημέρες", budget:"€1.450 - €2.100", landmarks:["Blue Lagoon","Golden Circle","Βόρειο Σέλας"], image:"https://images.unsplash.com/photo-1504829857797-ddff29c27927?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Reykjavik+Iceland", eu:false }
     ];
 
+    const europeCatalog = [
+      ["Αλβανία","Τίρανα"],["Ανδόρα","Ανδόρα λα Βέγια"],["Αυστρία","Βιέννη"],["Βέλγιο","Βρυξέλλες"],["Βοσνία και Ερζεγοβίνη","Σαράγεβο"],["Βουλγαρία","Σόφια"],["Γερμανία","Βερολίνο"],["Δανία","Κοπεγχάγη"],["Ελβετία","Βέρνη"],["Εσθονία","Ταλίν"],["Ελλάδα","Αθήνα"],["Ηνωμένο Βασίλειο","Λονδίνο"],["Ιρλανδία","Δουβλίνο"],["Κροατία","Ζάγκρεμπ"],["Κύπρος","Λευκωσία"],["Λετονία","Ρίγα"],["Λευκορωσία","Μινσκ"],["Λιθουανία","Βίλνιους"],["Λιχτενστάιν","Βαντούζ"],["Λουξεμβούργο","Λουξεμβούργο"],["Μάλτα","Βαλέτα"],["Μαυροβούνιο","Ποντγκόριτσα"],["Μονακό","Μονακό"],["Μολδαβία","Κισινάου"],["Νορβηγία","Όσλο"],["Ολλανδία","Άμστερνταμ"],["Ουγγαρία","Βουδαπέστη"],["Ουκρανία","Κίεβο"],["Πολωνία","Βαρσοβία"],["Ρουμανία","Βουκουρέστι"],["Σαν Μαρίνο","Σαν Μαρίνο"],["Σερβία","Βελιγράδι"],["Σλοβακία","Μπρατισλάβα"],["Σλοβενία","Λιουμπλιάνα"],["Σουηδία","Στοκχόλμη"],["Τσεχία","Πράγα"],["Φινλανδία","Ελσίνκι"],["Βόρεια Μακεδονία","Σκόπια"],["Βατικανό","Βατικανό"]
+    ].map(([country, city]) => ({ country, city, catalogOnly:true, image:"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(city + " " + country), eu:false }));
+
+    const allDestinations = [...destinations, ...europeCatalog];
+
     function officialDocumentsUrl(destination) {
       return destination.eu ? "https://europa.eu/youreurope/citizens/travel/entry-exit/eu-citizen/index_el.htm" : "https://www.mfa.gr/en/citizen-services/travel-advice/";
     }
 
-    function renderGuide() {
+    function renderGuide(query = "") {
       const grid = $("destination-grid");
       grid.replaceChildren();
-      destinations.forEach((destination, index) => {
+      const normalizedQuery = query.trim().toLocaleLowerCase("el");
+      const matches = allDestinations.filter((destination) => (destination.country + " " + destination.city).toLocaleLowerCase("el").includes(normalizedQuery));
+      matches.forEach((destination, index) => {
         const card = document.createElement("button");
         card.className = "destination-card";
         card.type = "button";
@@ -365,7 +374,7 @@
         card.style.animationDelay = (index * 55) + "ms";
         const content = document.createElement("span");
         content.className = "destination-card-content";
-        content.innerHTML = "<small>" + destination.country + "</small><strong>" + destination.city + "</strong>";
+        content.innerHTML = "<small>" + destination.country + (destination.catalogOnly ? " · Σύντομα" : "") + "</small><strong>" + destination.city + "</strong>";
         card.append(content);
         card.addEventListener("click", () => showDestination(destination));
         grid.append(card);
@@ -378,6 +387,11 @@
       const detail = $("guide-detail");
       detail.classList.remove("hidden");
       detail.replaceChildren();
+      if (destination.catalogOnly) {
+        detail.innerHTML = "<div class=\"guide-detail-image\" style=\"background-image:url('" + destination.image + "')\"></div><div class=\"guide-detail-body\"><p class=\"guide-kicker\">" + destination.country + "</p><h2>" + destination.city + "</h2><p>Ο προορισμός είναι ήδη στον ευρωπαϊκό κατάλογο. Προσθέτουμε σταδιακά φωτογραφία, εποχές, πτήση και budget με επιβεβαιωμένες πληροφορίες.</p><div class=\"guide-actions\"><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"" + destination.map + "\">Άνοιγμα στον χάρτη</a><a class=\"secondary-link\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://www.mfa.gr/en/citizen-services/travel-advice/\">Έλεγχος ταξιδιωτικών εγγράφων</a></div></div>";
+        window.scrollTo({ top:0, behavior:"smooth" });
+        return;
+      }
       const landmarks = destination.landmarks.map((item) => "<span class=\"landmark\">" + item + "</span>").join("");
       detail.innerHTML = "<div class=\"guide-detail-image\" style=\"background-image:url('" + destination.image + "')\"></div><div class=\"guide-detail-body\"><p class=\"guide-kicker\">" + destination.country + "</p><h2>" + destination.city + "</h2><p>Μια γρήγορη εικόνα για να αρχίσει η έμπνευση. Οι χρόνοι και τα ποσά είναι ενδεικτικά από Αθήνα.</p><div class=\"guide-facts\"><div class=\"guide-fact\"><small>Καλύτεροι μήνες</small><strong>" + destination.months + "</strong></div><div class=\"guide-fact\"><small>Πτήση από Αθήνα</small><strong>" + destination.flight + "</strong></div><div class=\"guide-fact\"><small>Προτεινόμενη διάρκεια</small><strong>" + destination.duration + "</strong></div><div class=\"guide-fact\"><small>Budget ανά άτομο</small><strong>" + destination.budget + "</strong></div></div><p class=\"choice-note\">Εκτίμηση για πτήση, διαμονή σε δίκλινο, φαγητό και βασικές δραστηριότητες. Οι τιμές αλλάζουν ανά περίοδο.</p><h3>Top αξιοθέατα</h3><div class=\"landmarks\">" + landmarks + "</div><div class=\"guide-actions\"><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"" + destination.map + "\">Άνοιγμα στον χάρτη</a><a class=\"secondary-link\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"" + officialDocumentsUrl(destination) + "\">Έλεγχος ταξιδιωτικών εγγράφων</a></div></div>";
       window.scrollTo({ top:0, behavior:"smooth" });
@@ -500,6 +514,7 @@
     $("pending-logout").addEventListener("click", () => signOut(auth));
     $("back-to-trips").addEventListener("click", () => showView("trips-view"));
     $("open-guide").addEventListener("click", openGuide);
+    $("guide-search").addEventListener("input", (event) => renderGuide(event.target.value));
     $("close-guide").addEventListener("click", () => {
       if (!$("guide-detail").classList.contains("hidden")) { openGuide(); return; }
       showView("trips-view");
