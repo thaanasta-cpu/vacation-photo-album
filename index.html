@@ -59,6 +59,37 @@
     .choice-hint { display:block; margin-top:4px; opacity:.92; }
     .choice-arrow { font-size:2rem; font-weight:300; }
     .choice-note { margin:16px 4px 0; color:var(--muted); font-size:.92rem; text-align:center; }
+    .guide-launch { display:flex; align-items:center; gap:15px; width:100%; margin:0 0 22px; padding:17px; border:0; border-radius:18px; color:#fff; text-align:left; background:linear-gradient(135deg,#17323b,#176b87); box-shadow:0 7px 18px rgba(23,50,59,.18); }
+    .guide-launch span:first-child { display:grid; width:48px; height:48px; flex:0 0 48px; place-items:center; border-radius:15px; background:rgba(255,255,255,.14); font-size:1.6rem; }
+    .guide-launch strong { display:block; font-size:1.08rem; }
+    .guide-launch small { display:block; margin-top:2px; opacity:.82; }
+    .guide-hero { position:relative; overflow:hidden; margin-bottom:18px; padding:28px 22px; border-radius:24px; color:#fff; background:linear-gradient(135deg,#17323b 0%,#176b87 58%,#39a9bb); animation:guideEnter .55s ease both; }
+    .guide-hero::after { position:absolute; right:-26px; bottom:-42px; width:160px; height:160px; border:24px solid rgba(246,185,75,.34); border-radius:50%; content:""; }
+    .guide-hero h2,.guide-hero p { position:relative; z-index:1; }
+    .guide-hero h2 { margin-bottom:7px; font-size:clamp(2rem,9vw,3rem); line-height:1; }
+    .guide-hero p { max-width:28rem; margin-bottom:0; }
+    .destination-grid { display:grid; gap:14px; }
+    .destination-card { position:relative; min-height:184px; overflow:hidden; border:0; border-radius:20px; color:#fff; text-align:left; background:#17323b center/cover; box-shadow:0 6px 18px rgba(23,50,59,.15); animation:cardRise .45s ease both; }
+    .destination-card::after { position:absolute; inset:0; background:linear-gradient(0deg,rgba(8,28,35,.88),rgba(8,28,35,.06) 72%); content:""; }
+    .destination-card-content { position:absolute; z-index:1; right:18px; bottom:17px; left:18px; }
+    .destination-card small { display:block; margin-bottom:3px; opacity:.88; }
+    .destination-card strong { font-size:1.45rem; }
+    .guide-detail { overflow:hidden; border-radius:22px; background:#fff; box-shadow:0 8px 22px rgba(23,50,59,.1); animation:guideEnter .35s ease both; }
+    .guide-detail-image { height:230px; background:center/cover; }
+    .guide-detail-body { padding:22px; }
+    .guide-kicker { margin-bottom:6px; color:var(--sea); font-weight:800; }
+    .guide-detail h2 { margin-bottom:8px; font-size:2rem; }
+    .guide-facts { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:18px 0; }
+    .guide-fact { padding:13px; border-radius:14px; background:var(--soft); }
+    .guide-fact small { display:block; color:var(--muted); }
+    .guide-fact strong { display:block; margin-top:2px; font-size:.96rem; }
+    .landmarks { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 20px; }
+    .landmark { padding:7px 10px; border-radius:999px; color:var(--sea-dark); background:#eef6f2; font-size:.9rem; font-weight:700; }
+    .guide-actions { display:grid; gap:10px; }
+    .guide-actions a { display:block; padding:14px; border-radius:13px; color:#fff; text-align:center; text-decoration:none; background:var(--sea); font-weight:800; }
+    .guide-actions a.secondary-link { color:var(--sea-dark); background:var(--soft); }
+    @keyframes guideEnter { from { opacity:0; transform:translateY(16px) scale(.98); } to { opacity:1; transform:none; } }
+    @keyframes cardRise { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
     .admin-title { display:flex; align-items:center; justify-content:space-between; gap:10px; }
     .request-badge { margin-top:12px; width:100%; min-height:45px; border:0; border-radius:12px; color:#704400; background:#fff0c9; font-weight:750; }
     .invite-button { width:100%; margin:2px 0 18px; }
@@ -105,6 +136,7 @@
       <section id="trips-view" class="hidden">
         <div class="top-actions"><span class="user-name" id="user-name"></span><button class="button secondary" id="logout-button" type="button">Αποσύνδεση</button></div>
         <div id="admin-bar" class="notice hidden"><div class="admin-title"><strong>Λειτουργία διαχειριστή</strong><button class="button" id="open-admin" type="button">Διαχείριση</button></div><button class="request-badge hidden" id="pending-requests" type="button"></button></div>
+        <button class="guide-launch" id="open-guide" type="button"><span aria-hidden="true">✈️</span><span><strong>Ταξιδιωτικός Οδηγός</strong><small>Ιδέες για το επόμενο ταξίδι</small></span></button>
         <h2>Τα ταξίδια σας</h2>
         <p class="subtle">Πατήστε ένα ταξίδι για φωτογραφίες ή βίντεο.</p>
         <div class="trip-list" id="trip-list"></div>
@@ -118,6 +150,12 @@
           <a class="choice videos" id="videos-link" href="#" target="_blank" rel="noopener noreferrer"><span class="choice-icon" aria-hidden="true">▶️</span><span class="choice-content"><strong>Βίντεο &amp; μουσική</strong><span class="choice-hint" id="videos-hint">Άνοιγμα στο YouTube</span></span><span class="choice-arrow" aria-hidden="true">›</span></a>
         </div>
         <p class="choice-note">Αν υπάρχει εγκατεστημένο το YouTube, το iPhone μπορεί να το ανοίξει αυτόματα.</p>
+      </section>
+
+      <section id="guide-view" class="hidden">
+        <button class="button secondary back" id="close-guide" type="button">‹ Πίσω στα ταξίδια</button>
+        <div id="guide-list"><div class="guide-hero"><h2>Πού πάμε μετά;</h2><p>Ανακάλυψε προορισμούς, ιδανικούς μήνες και τα βασικά πριν αρχίσει ο σχεδιασμός.</p></div><div class="destination-grid" id="destination-grid"></div></div>
+        <div id="guide-detail" class="hidden"></div>
       </section>
 
       <section id="admin-view" class="hidden">
@@ -165,7 +203,7 @@
     const provider = new GoogleAuthProvider();
     const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
 
-    const views = ["login-view", "pending-view", "trips-view", "choices-view", "admin-view"];
+    const views = ["login-view", "pending-view", "trips-view", "choices-view", "guide-view", "admin-view"];
     const state = { user:null, membership:null, trips:[], selectedTrip:null, editingTripId:null, unsubscribe:null, membershipUnsubscribe:null, pendingRequestsUnsubscribe:null };
     const $ = (id) => document.getElementById(id);
 
@@ -302,6 +340,50 @@
       window.scrollTo({ top:0, behavior:"smooth" });
     }
 
+    const destinations = [
+      { country:"Ιταλία", city:"Ρώμη", months:"Απρίλιος - Ιούνιος, Σεπτέμβριος - Οκτώβριος", flight:"περίπου 2ω", landmarks:["Κολοσσαίο","Βατικανό","Fontana di Trevi"], image:"https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Rome+Italy", eu:true },
+      { country:"Γαλλία", city:"Παρίσι", months:"Απρίλιος - Ιούνιος, Σεπτέμβριος - Οκτώβριος", flight:"περίπου 3ω 30λ", landmarks:["Πύργος Eiffel","Louvre","Montmartre"], image:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Paris+France", eu:true },
+      { country:"Ισπανία", city:"Βαρκελώνη", months:"Μάιος - Ιούνιος, Σεπτέμβριος - Οκτώβριος", flight:"περίπου 3ω", landmarks:["Sagrada Familia","Park Güell","Gothic Quarter"], image:"https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Barcelona+Spain", eu:true },
+      { country:"Πορτογαλία", city:"Λισαβόνα", months:"Μάρτιος - Μάιος, Σεπτέμβριος - Οκτώβριος", flight:"περίπου 4ω 30λ", landmarks:["Alfama","Tram 28","Belém"], image:"https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Lisbon+Portugal", eu:true },
+      { country:"Ιαπωνία", city:"Τόκιο", months:"Μάρτιος - Μάιος, Οκτώβριος - Νοέμβριος", flight:"περίπου 12ω+", landmarks:["Shibuya","Asakusa","Meiji Shrine"], image:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Tokyo+Japan", eu:false },
+      { country:"Ισλανδία", city:"Ρέικιαβικ", months:"Ιούνιος - Αύγουστος, Σεπτέμβριος - Μάρτιος", flight:"περίπου 6ω+", landmarks:["Blue Lagoon","Golden Circle","Βόρειο Σέλας"], image:"https://images.unsplash.com/photo-1504829857797-ddff29c27927?auto=format&fit=crop&w=1400&q=80", map:"https://www.google.com/maps/search/?api=1&query=Reykjavik+Iceland", eu:false }
+    ];
+
+    function officialDocumentsUrl(destination) {
+      return destination.eu ? "https://europa.eu/youreurope/citizens/travel/entry-exit/eu-citizen/index_el.htm" : "https://www.mfa.gr/en/citizen-services/travel-advice/";
+    }
+
+    function renderGuide() {
+      const grid = $("destination-grid");
+      grid.replaceChildren();
+      destinations.forEach((destination, index) => {
+        const card = document.createElement("button");
+        card.className = "destination-card";
+        card.type = "button";
+        card.style.backgroundImage = "url('" + destination.image + "')";
+        card.style.animationDelay = (index * 55) + "ms";
+        const content = document.createElement("span");
+        content.className = "destination-card-content";
+        content.innerHTML = "<small>" + destination.country + "</small><strong>" + destination.city + "</strong>";
+        card.append(content);
+        card.addEventListener("click", () => showDestination(destination));
+        grid.append(card);
+      });
+    }
+
+    function showDestination(destination) {
+      $("guide-list").classList.add("hidden");
+      $("close-guide").textContent = "‹ Πίσω στους προορισμούς";
+      const detail = $("guide-detail");
+      detail.classList.remove("hidden");
+      detail.replaceChildren();
+      const landmarks = destination.landmarks.map((item) => "<span class=\"landmark\">" + item + "</span>").join("");
+      detail.innerHTML = "<div class=\"guide-detail-image\" style=\"background-image:url('" + destination.image + "')\"></div><div class=\"guide-detail-body\"><p class=\"guide-kicker\">" + destination.country + "</p><h2>" + destination.city + "</h2><p>Μια γρήγορη εικόνα για να αρχίσει η έμπνευση. Οι χρόνοι πτήσης είναι ενδεικτικοί από Αθήνα.</p><div class=\"guide-facts\"><div class=\"guide-fact\"><small>Καλύτεροι μήνες</small><strong>" + destination.months + "</strong></div><div class=\"guide-fact\"><small>Πτήση από Αθήνα</small><strong>" + destination.flight + "</strong></div></div><h3>Top αξιοθέατα</h3><div class=\"landmarks\">" + landmarks + "</div><div class=\"guide-actions\"><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"" + destination.map + "\">Άνοιγμα στον χάρτη</a><a class=\"secondary-link\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"" + officialDocumentsUrl(destination) + "\">Έλεγχος ταξιδιωτικών εγγράφων</a></div></div>";
+      window.scrollTo({ top:0, behavior:"smooth" });
+    }
+
+    function openGuide() { $("guide-detail").classList.add("hidden"); $("guide-list").classList.remove("hidden"); $("close-guide").textContent = "‹ Πίσω στα ταξίδια"; renderGuide(); showView("guide-view"); window.scrollTo({ top:0, behavior:"smooth" }); }
+
     function resetTripForm() {
       state.editingTripId = null;
       $("trip-form-title").textContent = "Νέο ταξίδι";
@@ -416,6 +498,11 @@
     $("logout-button").addEventListener("click", () => signOut(auth));
     $("pending-logout").addEventListener("click", () => signOut(auth));
     $("back-to-trips").addEventListener("click", () => showView("trips-view"));
+    $("open-guide").addEventListener("click", openGuide);
+    $("close-guide").addEventListener("click", () => {
+      if (!$("guide-detail").classList.contains("hidden")) { openGuide(); return; }
+      showView("trips-view");
+    });
     $("open-admin").addEventListener("click", () => openAdmin("trips"));
     $("pending-requests").addEventListener("click", () => openAdmin("people"));
     $("close-admin").addEventListener("click", () => { resetTripForm(); showView("trips-view"); });
