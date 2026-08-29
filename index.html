@@ -187,6 +187,13 @@
       return new Intl.DateTimeFormat("el-GR", { month:"long", year:"numeric" }).format(new Date(year, month - 1, 1));
     }
 
+    function sortTrips(trips) {
+      return trips.sort((a, b) => {
+        const byDate = (b.tripDate || "").localeCompare(a.tripDate || "");
+        return byDate || (a.title || "").localeCompare(b.title || "", "el");
+      });
+    }
+
     function listenForPendingRequests() {
       state.pendingRequestsUnsubscribe = onSnapshot(collection(db, "memberships"), (snapshot) => {
         const count = snapshot.docs.filter((item) => item.data().status === "pending").length;
@@ -210,7 +217,7 @@
         const snapshot = await getDoc(doc(db, "trips", tripId));
         return snapshot.exists() ? { id:snapshot.id, ...snapshot.data() } : null;
       }));
-      state.trips = trips.filter(Boolean).sort((a, b) => (a.title || "").localeCompare(b.title || "", "el"));
+      state.trips = sortTrips(trips.filter(Boolean));
       renderTrips();
     }
 
@@ -218,7 +225,7 @@
       clearTripListener();
       if (isAdmin()) {
         state.unsubscribe = onSnapshot(collection(db, "trips"), (snapshot) => {
-          state.trips = snapshot.docs.map((item) => ({ id:item.id, ...item.data() })).sort((a, b) => (a.title || "").localeCompare(b.title || "", "el"));
+          state.trips = sortTrips(snapshot.docs.map((item) => ({ id:item.id, ...item.data() })));
           renderTrips();
           renderAdminTrips();
         }, (error) => showMessage(error.message));
