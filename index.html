@@ -363,8 +363,9 @@
       $("user-name").textContent = formatName(user);
       $("admin-bar").classList.toggle("hidden", !isAdmin());
       try {
-        await ensureMembership(user);
+        // The administrator does not need a membership request.
         if (isAdmin()) { listenForTrips(); showView("trips-view"); return; }
+        await ensureMembership(user);
         state.membershipUnsubscribe = onSnapshot(doc(db, "memberships", user.uid), (membership) => {
           state.membership = membership.data();
           if (!state.membership || state.membership.status !== "approved") { clearTripListener(); showView("pending-view"); return; }
