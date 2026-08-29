@@ -137,7 +137,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+    import { browserLocalPersistence, getAuth, GoogleAuthProvider, onAuthStateChanged, setPersistence, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
     import { getFirestore, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, serverTimestamp, setDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -153,6 +153,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
 
     const views = ["login-view", "pending-view", "trips-view", "choices-view", "admin-view"];
     const state = { user:null, membership:null, trips:[], selectedTrip:null, editingTripId:null, unsubscribe:null, membershipUnsubscribe:null };
@@ -348,7 +349,12 @@
       window.scrollTo({ top:0, behavior:"smooth" });
     }
 
-    $("login-button").addEventListener("click", () => signInWithPopup(auth, provider).catch((error) => showMessage(error.message)));
+    $("login-button").addEventListener("click", async () => {
+      try {
+        await authPersistenceReady;
+        await signInWithPopup(auth, provider);
+      } catch (error) { showMessage(error.message); }
+    });
     $("logout-button").addEventListener("click", () => signOut(auth));
     $("pending-logout").addEventListener("click", () => signOut(auth));
     $("back-to-trips").addEventListener("click", () => showView("trips-view"));
