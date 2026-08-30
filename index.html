@@ -560,6 +560,22 @@
       document.body.classList.remove("modal-open");
     }
 
+    async function findLandmarkPage(search) {
+      const params = new URLSearchParams({ action:"query", generator:"search", gsrsearch:search, gsrnamespace:"0", gsrlimit:"1", prop:"pageimages|extracts|info", piprop:"thumbnail", pithumbsize:"1200", exintro:"1", explaintext:"1", inprop:"url", format:"json", origin:"*" });
+      let textOnlyPage = null;
+      for (const wiki of ["https://el.wikipedia.org", "https://en.wikipedia.org"]) {
+        try {
+          const response = await fetch(wiki + "/w/api.php?" + params);
+          if (!response.ok) continue;
+          const data = await response.json();
+          const page = Object.values(data.query?.pages || {}).find((item) => !item.missing);
+          if (page?.thumbnail?.source) return page;
+          if (page && !textOnlyPage) textOnlyPage = page;
+        } catch { continue; }
+      }
+      return textOnlyPage;
+    }
+
     async function openLandmark(destination, landmark) {
       const requestId = ++landmarkRequestId;
       const fallback = safeImage(destination.image);
@@ -576,13 +592,9 @@
       document.body.classList.add("modal-open");
       $("landmark-close").focus();
 
-      const params = new URLSearchParams({ action:"query", generator:"search", gsrsearch:landmark + " " + destination.city, gsrnamespace:"0", gsrlimit:"1", prop:"pageimages|extracts|info", piprop:"thumbnail", pithumbsize:"1200", exintro:"1", explaintext:"1", inprop:"url", format:"json", origin:"*" });
       try {
-        const response = await fetch("https://en.wikipedia.org/w/api.php?" + params);
-        if (!response.ok) throw new Error("Wikipedia request failed");
-        const data = await response.json();
+        const page = await findLandmarkPage(landmark + " " + destination.city);
         if (requestId !== landmarkRequestId) return;
-        const page = Object.values(data.query?.pages || {}).find((item) => !item.missing);
         if (page?.thumbnail?.source) $("landmark-image").src = page.thumbnail.source;
         if (page?.extract) $("landmark-description").textContent = shortenLandmarkDescription(page.extract);
         if (page?.fullurl) {
