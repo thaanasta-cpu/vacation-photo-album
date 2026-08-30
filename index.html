@@ -93,11 +93,31 @@
     .guide-alert { margin:16px 0; padding:13px 14px; border:1px solid #efc6a3; border-radius:14px; color:#7a401b; background:#fff4e8; font-size:.92rem; }
     .landmarks { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 20px; }
     .landmark { padding:7px 10px; border-radius:999px; color:var(--sea-dark); background:#eef6f2; font-size:.9rem; font-weight:700; }
+    .landmark-button { border:0; font:inherit; cursor:pointer; }
+    .landmark-button:active { transform:scale(.97); }
+    .landmark-button:focus-visible { outline:3px solid var(--sun); outline-offset:2px; }
+    body.modal-open { overflow:hidden; }
+    .landmark-modal { position:fixed; z-index:20; inset:0; display:flex; align-items:flex-end; justify-content:center; padding:18px; background:rgba(8,28,35,.58); animation:modalFade .22s ease both; }
+    .landmark-backdrop { position:absolute; inset:0; border:0; background:transparent; }
+    .landmark-sheet { position:relative; z-index:1; width:min(100%,560px); max-height:88vh; overflow:auto; border-radius:24px; background:#fff; box-shadow:0 20px 60px rgba(0,0,0,.28); animation:sheetRise .3s cubic-bezier(.2,.8,.2,1) both; }
+    .landmark-image-wrap { height:220px; overflow:hidden; background:var(--soft); }
+    .landmark-image-wrap img { width:100%; height:100%; object-fit:cover; }
+    .landmark-close { position:absolute; z-index:2; top:13px; right:13px; display:grid; width:42px; height:42px; place-items:center; border:0; border-radius:50%; color:var(--text); background:rgba(255,255,255,.94); box-shadow:0 3px 12px rgba(0,0,0,.16); font-size:1.45rem; }
+    .landmark-body { padding:21px; }
+    .landmark-context { margin-bottom:4px; color:var(--sea); font-size:.9rem; font-weight:800; }
+    .landmark-body h2 { margin-bottom:9px; font-size:1.7rem; line-height:1.1; }
+    .landmark-description { color:var(--muted); }
+    .landmark-loading { margin:12px 0 0; color:var(--sea); font-size:.86rem; font-weight:700; }
+    .landmark-actions { display:grid; gap:10px; margin-top:18px; }
+    .landmark-actions a { display:block; padding:13px; border-radius:13px; color:#fff; text-align:center; text-decoration:none; background:var(--sea); font-weight:800; }
+    .landmark-actions a.secondary-link { color:var(--sea-dark); background:var(--soft); }
     .guide-actions { display:grid; gap:10px; }
     .guide-actions a { display:block; padding:14px; border-radius:13px; color:#fff; text-align:center; text-decoration:none; background:var(--sea); font-weight:800; }
     .guide-actions a.secondary-link { color:var(--sea-dark); background:var(--soft); }
     @keyframes guideEnter { from { opacity:0; transform:translateY(16px) scale(.98); } to { opacity:1; transform:none; } }
     @keyframes cardRise { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+    @keyframes modalFade { from { opacity:0; } to { opacity:1; } }
+    @keyframes sheetRise { from { opacity:0; transform:translateY(26px); } to { opacity:1; transform:none; } }
     .admin-title { display:flex; align-items:center; justify-content:space-between; gap:10px; }
     .request-badge { margin-top:12px; width:100%; min-height:45px; border:0; border-radius:12px; color:#704400; background:#fff0c9; font-weight:750; }
     .invite-button { width:100%; margin:2px 0 18px; }
@@ -188,6 +208,14 @@
         <div id="admin-people" class="hidden"><button class="button invite-button" id="share-invite" type="button">Πρόσκληση ατόμου</button><p class="subtle">Στείλε το link της εφαρμογής και μετά επίλεξε τα ταξίδια που επιτρέπεται να βλέπει κάθε άτομο.</p><div class="admin-list" id="people-list"></div></div>
       </section>
     </main>
+    <div class="landmark-modal hidden" id="landmark-modal" role="dialog" aria-modal="true" aria-labelledby="landmark-title">
+      <button class="landmark-backdrop" id="landmark-backdrop" type="button" aria-label="Κλείσιμο παραθύρου"></button>
+      <article class="landmark-sheet">
+        <button class="landmark-close" id="landmark-close" type="button" aria-label="Κλείσιμο">×</button>
+        <div class="landmark-image-wrap"><img id="landmark-image" alt=""></div>
+        <div class="landmark-body"><p class="landmark-context" id="landmark-context"></p><h2 id="landmark-title"></h2><p class="landmark-description" id="landmark-description"></p><p class="landmark-loading" id="landmark-loading">Φόρτωση φωτογραφίας και πληροφοριών...</p><div class="landmark-actions"><a id="landmark-map" target="_blank" rel="noopener noreferrer" href="#">Άνοιγμα στον χάρτη</a><a class="secondary-link hidden" id="landmark-wikipedia" target="_blank" rel="noopener noreferrer" href="#">Περισσότερα στη Wikipedia</a></div></div>
+      </article>
+    </div>
     <footer>Οι σύνδεσμοι εμφανίζονται μόνο σε εγκεκριμένους χρήστες.</footer>
   </div>
 
@@ -508,10 +536,64 @@
         window.scrollTo({ top:0, behavior:"smooth" });
         return;
       }
-      const landmarks = destination.landmarks.map((item) => "<span class=\"landmark\">" + item + "</span>").join("");
+      const landmarks = destination.landmarks.map((item, index) => "<button class=\"landmark landmark-button\" type=\"button\" data-landmark-index=\"" + index + "\">" + item + "</button>").join("");
       const travelNotice = destination.notice ? "<p class=\"guide-alert\">" + destination.notice + "</p>" : "";
       detail.innerHTML = "<div class=\"guide-detail-image\" style=\"background-image:url('" + destination.image + "')\"></div><div class=\"guide-detail-body\"><p class=\"guide-kicker\">" + destination.country + "</p><h2>" + destination.city + "</h2><p>Μια γρήγορη εικόνα για να αρχίσει η έμπνευση. Οι χρόνοι και τα ποσά είναι ενδεικτικά από Αθήνα.</p>" + travelNotice + "<div class=\"guide-facts\"><div class=\"guide-fact\"><small>Καλύτεροι μήνες</small><strong>" + destination.months + "</strong></div><div class=\"guide-fact\"><small>Πτήση από Αθήνα</small><strong>" + destination.flight + "</strong></div><div class=\"guide-fact\"><small>Προτεινόμενη διάρκεια</small><strong>" + destination.duration + "</strong></div><div class=\"guide-fact\"><small>Budget ανά άτομο</small><strong>" + destination.budget + "</strong></div></div><p class=\"choice-note\">Εκτίμηση για πτήση, διαμονή σε δίκλινο, φαγητό και βασικές δραστηριότητες. Οι τιμές αλλάζουν ανά περίοδο.</p><h3>Top αξιοθέατα</h3><div class=\"landmarks\">" + landmarks + "</div><div class=\"guide-actions\"><a target=\"_blank\" rel=\"noopener noreferrer\" href=\"" + destination.map + "\">Άνοιγμα στον χάρτη</a><a class=\"secondary-link\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"" + officialDocumentsUrl(destination) + "\">Έλεγχος ταξιδιωτικών εγγράφων</a></div></div>";
+      detail.querySelectorAll(".landmark-button").forEach((button) => button.addEventListener("click", () => openLandmark(destination, destination.landmarks[Number(button.dataset.landmarkIndex)])));
       window.scrollTo({ top:0, behavior:"smooth" });
+    }
+
+    let landmarkRequestId = 0;
+
+    function landmarkMapUrl(landmark, destination) {
+      return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(landmark + " " + destination.city + " " + destination.country);
+    }
+
+    function shortenLandmarkDescription(text) {
+      const normalized = text.trim().replace(/\s+/g, " ");
+      return normalized.length > 290 ? normalized.slice(0, 287).trimEnd() + "..." : normalized;
+    }
+
+    function closeLandmark() {
+      landmarkRequestId += 1;
+      $("landmark-modal").classList.add("hidden");
+      document.body.classList.remove("modal-open");
+    }
+
+    async function openLandmark(destination, landmark) {
+      const requestId = ++landmarkRequestId;
+      const fallback = safeImage(destination.image);
+      $("landmark-title").textContent = landmark;
+      $("landmark-context").textContent = destination.city + ", " + destination.country;
+      $("landmark-description").textContent = "Μικρή στάση για να δεις το αξιοθέατο και να το βρεις εύκολα στον χάρτη.";
+      $("landmark-image").src = fallback;
+      $("landmark-image").alt = landmark + ", " + destination.city;
+      $("landmark-image").onerror = () => { $("landmark-image").src = fallbackImage; };
+      $("landmark-map").href = landmarkMapUrl(landmark, destination);
+      $("landmark-wikipedia").classList.add("hidden");
+      $("landmark-loading").textContent = "Φόρτωση φωτογραφίας και πληροφοριών...";
+      $("landmark-modal").classList.remove("hidden");
+      document.body.classList.add("modal-open");
+      $("landmark-close").focus();
+
+      const params = new URLSearchParams({ action:"query", generator:"search", gsrsearch:landmark + " " + destination.city, gsrnamespace:"0", gsrlimit:"1", prop:"pageimages|extracts|info", piprop:"thumbnail", pithumbsize:"1200", exintro:"1", explaintext:"1", inprop:"url", format:"json", origin:"*" });
+      try {
+        const response = await fetch("https://en.wikipedia.org/w/api.php?" + params);
+        if (!response.ok) throw new Error("Wikipedia request failed");
+        const data = await response.json();
+        if (requestId !== landmarkRequestId) return;
+        const page = Object.values(data.query?.pages || {}).find((item) => !item.missing);
+        if (page?.thumbnail?.source) $("landmark-image").src = page.thumbnail.source;
+        if (page?.extract) $("landmark-description").textContent = shortenLandmarkDescription(page.extract);
+        if (page?.fullurl) {
+          $("landmark-wikipedia").href = page.fullurl;
+          $("landmark-wikipedia").classList.remove("hidden");
+        }
+        $("landmark-loading").textContent = page ? "Πληροφορίες από Wikipedia" : "Δεν βρέθηκαν επιπλέον πληροφορίες, αλλά μπορείς να το ανοίξεις στον χάρτη.";
+      } catch {
+        if (requestId !== landmarkRequestId) return;
+        $("landmark-loading").textContent = "Δεν φορτώθηκαν επιπλέον πληροφορίες. Ο χάρτης παραμένει διαθέσιμος.";
+      }
     }
 
     function openGuide() { $("guide-detail").classList.add("hidden"); $("guide-list").classList.remove("hidden"); $("close-guide").textContent = "‹ Πίσω στα ταξίδια"; renderGuide(); showView("guide-view"); window.scrollTo({ top:0, behavior:"smooth" }); }
@@ -633,6 +715,9 @@
     $("open-guide").addEventListener("click", openGuide);
     $("guide-search").addEventListener("input", renderGuide);
     ["guide-duration", "guide-budget", "guide-flight", "guide-sort"].forEach((id) => $(id).addEventListener("change", renderGuide));
+    $("landmark-close").addEventListener("click", closeLandmark);
+    $("landmark-backdrop").addEventListener("click", closeLandmark);
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !$("landmark-modal").classList.contains("hidden")) closeLandmark(); });
     $("close-guide").addEventListener("click", () => {
       if (!$("guide-detail").classList.contains("hidden")) { openGuide(); return; }
       showView("trips-view");
