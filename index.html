@@ -69,6 +69,12 @@
     .guide-hero h2 { margin-bottom:7px; font-size:clamp(2rem,9vw,3rem); line-height:1; }
     .guide-hero p { max-width:28rem; margin-bottom:0; }
     .guide-search { width:100%; margin-top:18px; border:0; background:rgba(255,255,255,.94); }
+    .guide-controls { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+    .guide-control { display:grid; gap:4px; color:rgba(255,255,255,.92); font-size:.77rem; font-weight:800; }
+    .guide-control select { width:100%; min-height:45px; padding:9px 10px; border:1px solid rgba(255,255,255,.36); border-radius:12px; color:var(--text); background:rgba(255,255,255,.96); font:inherit; font-size:.91rem; }
+    .guide-control.sort { grid-column:1 / -1; }
+    .guide-results { margin:0 4px 12px; color:var(--muted); font-size:.9rem; font-weight:700; }
+    .guide-empty { margin:0; padding:22px; border:1px dashed var(--line); border-radius:16px; color:var(--muted); text-align:center; background:#fff; }
     .destination-grid { display:grid; gap:14px; }
     .destination-card { position:relative; min-height:184px; overflow:hidden; border:0; border-radius:20px; color:#fff; text-align:left; background:#17323b center/cover; box-shadow:0 6px 18px rgba(23,50,59,.15); animation:cardRise .45s ease both; }
     .destination-card::after { position:absolute; inset:0; background:linear-gradient(0deg,rgba(8,28,35,.88),rgba(8,28,35,.06) 72%); content:""; }
@@ -156,7 +162,7 @@
 
       <section id="guide-view" class="hidden">
         <button class="button secondary back" id="close-guide" type="button">‹ Πίσω στα ταξίδια</button>
-        <div id="guide-list"><div class="guide-hero"><h2>Πού πάμε μετά;</h2><p>Ανακάλυψε προορισμούς, ιδανικούς μήνες και τα βασικά πριν αρχίσει ο σχεδιασμός.</p><input class="guide-search" id="guide-search" type="search" placeholder="Αναζήτηση χώρας ή πόλης"></div><div class="destination-grid" id="destination-grid"></div></div>
+        <div id="guide-list"><div class="guide-hero"><h2>Πού πάμε μετά;</h2><p>Ανακάλυψε προορισμούς, ιδανικούς μήνες και τα βασικά πριν αρχίσει ο σχεδιασμός.</p><input class="guide-search" id="guide-search" type="search" placeholder="Αναζήτηση χώρας ή πόλης"><div class="guide-controls" aria-label="Φίλτρα προορισμών"><label class="guide-control" for="guide-duration"><span>Διάρκεια ταξιδιού</span><select id="guide-duration"><option value="all">Οποιαδήποτε</option><option value="short">Έως 3 ημέρες</option><option value="medium">4 - 5 ημέρες</option><option value="long">6+ ημέρες</option></select></label><label class="guide-control" for="guide-budget"><span>Budget ανά άτομο</span><select id="guide-budget"><option value="all">Οποιοδήποτε</option><option value="low">Έως €700</option><option value="medium">€701 - €1.000</option><option value="high">Πάνω από €1.000</option></select></label><label class="guide-control" for="guide-flight"><span>Χρόνος πτήσης</span><select id="guide-flight"><option value="all">Οποιοσδήποτε</option><option value="short">Έως 2 ώρες</option><option value="medium">2 - 4 ώρες</option><option value="long">Πάνω από 4 ώρες</option></select></label><label class="guide-control sort" for="guide-sort"><span>Ταξινόμηση</span><select id="guide-sort"><option value="default">Προτεινόμενη σειρά</option><option value="budget">Χαμηλότερο budget</option><option value="duration">Λιγότερες ημέρες</option><option value="flight">Συντομότερη πτήση</option><option value="name">Αλφαβητικά</option></select></label></div></div><p class="guide-results" id="guide-results" aria-live="polite"></p><div class="destination-grid" id="destination-grid"></div></div>
         <div id="guide-detail" class="hidden"></div>
       </section>
 
@@ -404,11 +410,77 @@
       return destination.eu ? "https://europa.eu/youreurope/citizens/travel/entry-exit/eu-citizen/index_el.htm" : "https://www.mfa.gr/en/citizen-services/travel-advice/";
     }
 
-    function renderGuide(query = "") {
+    function budgetFromDestination(destination) {
+      const match = destination.budget.match(/€\s*([\d.]+)/);
+      return match ? Number(match[1].replace(/\./g, "")) : null;
+    }
+
+    function durationFromDestination(destination) {
+      const match = destination.duration.match(/\d+/);
+      return match ? Number(match[0]) : null;
+    }
+
+    function flightFromDestination(destination) {
+      const match = destination.flight.match(/(\d+)(?:\s*-\s*\d+)?\s*ω(?:\s*(\d+)\s*λ)?/);
+      return match ? Number(match[1]) + (match[2] ? Number(match[2]) / 60 : 0) : null;
+    }
+
+    function matchesGuideRange(value, filter) {
+      if (filter === "all") return true;
+      if (value === null) return false;
+      if (filter === "short") return value <= 3;
+      if (filter === "medium") return value >= 4 && value <= 5;
+      return value >= 6;
+    }
+
+    function matchesBudgetRange(value, filter) {
+      if (filter === "all") return true;
+      if (value === null) return false;
+      if (filter === "low") return value <= 700;
+      if (filter === "medium") return value > 700 && value <= 1000;
+      return value > 1000;
+    }
+
+    function matchesFlightRange(value, filter) {
+      if (filter === "all") return true;
+      if (value === null) return false;
+      if (filter === "short") return value <= 2;
+      if (filter === "medium") return value > 2 && value <= 4;
+      return value > 4;
+    }
+
+    function sortByGuideMetric(destinations, metric) {
+      return destinations.sort((a, b) => {
+        const first = metric(a);
+        const second = metric(b);
+        if (first === null && second === null) return a.city.localeCompare(b.city, "el");
+        if (first === null) return 1;
+        if (second === null) return -1;
+        return first - second || a.city.localeCompare(b.city, "el");
+      });
+    }
+
+    function renderGuide() {
       const grid = $("destination-grid");
       grid.replaceChildren();
-      const normalizedQuery = query.trim().toLocaleLowerCase("el");
-      const matches = allDestinations.filter((destination) => (destination.country + " " + destination.city).toLocaleLowerCase("el").includes(normalizedQuery));
+      const normalizedQuery = $("guide-search").value.trim().toLocaleLowerCase("el");
+      const durationFilter = $("guide-duration").value;
+      const budgetFilter = $("guide-budget").value;
+      const flightFilter = $("guide-flight").value;
+      const sort = $("guide-sort").value;
+      const matches = allDestinations.filter((destination) => {
+        const searchable = (destination.country + " " + destination.city).toLocaleLowerCase("el");
+        return searchable.includes(normalizedQuery) && matchesGuideRange(durationFromDestination(destination), durationFilter) && matchesBudgetRange(budgetFromDestination(destination), budgetFilter) && matchesFlightRange(flightFromDestination(destination), flightFilter);
+      });
+      if (sort === "budget") sortByGuideMetric(matches, budgetFromDestination);
+      if (sort === "duration") sortByGuideMetric(matches, durationFromDestination);
+      if (sort === "flight") sortByGuideMetric(matches, flightFromDestination);
+      if (sort === "name") matches.sort((a, b) => a.city.localeCompare(b.city, "el"));
+      $("guide-results").textContent = matches.length === 1 ? "1 προορισμός βρέθηκε" : matches.length + " προορισμοί βρέθηκαν";
+      if (!matches.length) {
+        grid.innerHTML = "<p class=\"guide-empty\">Δεν βρέθηκε προορισμός με αυτά τα φίλτρα. Δοκίμασε μια πιο ανοιχτή επιλογή.</p>";
+        return;
+      }
       matches.forEach((destination, index) => {
         const card = document.createElement("button");
         card.className = "destination-card";
@@ -559,7 +631,8 @@
     $("pending-logout").addEventListener("click", () => signOut(auth));
     $("back-to-trips").addEventListener("click", () => showView("trips-view"));
     $("open-guide").addEventListener("click", openGuide);
-    $("guide-search").addEventListener("input", (event) => renderGuide(event.target.value));
+    $("guide-search").addEventListener("input", renderGuide);
+    ["guide-duration", "guide-budget", "guide-flight", "guide-sort"].forEach((id) => $(id).addEventListener("change", renderGuide));
     $("close-guide").addEventListener("click", () => {
       if (!$("guide-detail").classList.contains("hidden")) { openGuide(); return; }
       showView("trips-view");
